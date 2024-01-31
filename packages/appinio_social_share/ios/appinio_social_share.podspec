@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'appinio_social_share'
-  s.version          = '0.0.2'
+  s.version          = '0.0.3'
   s.summary          = 'A new Flutter project.'
   s.description      = <<-DESC
 A new Flutter project.
@@ -16,8 +16,8 @@ A new Flutter project.
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
   s.dependency 'TikTokOpenSDK', '5.0.15'
-  s.dependency 'FBSDKCoreKit', '16.2.0'
-  s.dependency 'FBSDKShareKit', '16.2.0'
+  s.dependency 'FBSDKCoreKit', '16.3.1'
+  s.dependency 'FBSDKShareKit', '16.3.1'
   s.static_framework = true
 
   s.platform = :ios, '9.0'

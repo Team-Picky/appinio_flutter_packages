@@ -1,17 +1,17 @@
 PODS:
-  - appinio_social_share (0.0.1):
-    - FBSDKCoreKit (= 16.2.0)
-    - FBSDKShareKit (= 16.2.0)
+  - appinio_social_share (0.0.2):
+    - FBSDKCoreKit (= 16.3.1)
+    - FBSDKShareKit (= 16.3.1)
     - Flutter
     - TikTokOpenSDK (= 5.0.15)
-  - FBAEMKit (16.2.0):
-    - FBSDKCoreKit_Basics (= 16.2.0)
-  - FBSDKCoreKit (16.2.0):
-    - FBAEMKit (= 16.2.0)
-    - FBSDKCoreKit_Basics (= 16.2.0)
-  - FBSDKCoreKit_Basics (16.2.0)
-  - FBSDKShareKit (16.2.0):
-    - FBSDKCoreKit (= 16.2.0)
+  - FBAEMKit (16.3.1):
+    - FBSDKCoreKit_Basics (= 16.3.1)
+  - FBSDKCoreKit (16.3.1):
+    - FBAEMKit (= 16.3.1)
+    - FBSDKCoreKit_Basics (= 16.3.1)
+  - FBSDKCoreKit_Basics (16.3.1)
+  - FBSDKShareKit (16.3.1):
+    - FBSDKCoreKit (= 16.3.1)
   - Flutter (1.0.0)
   - TikTokOpenSDK (5.0.15)
 
@@ -34,14 +34,14 @@ EXTERNAL SOURCES:
     :path: Flutter
 
 SPEC CHECKSUMS:
-  appinio_social_share: cedb9f7e5d470eda1858f49f697bad8fab8680d7
-  FBAEMKit: 5facf4292bff062963f563d68fd5c0cdd6c90d63
-  FBSDKCoreKit: f94e107ae84a6f4c0d9edfd06ed989b084bfa5bb
-  FBSDKCoreKit_Basics: 8123411ba15df07f9a8da760630f4cdfeeaea6a7
-  FBSDKShareKit: a29437fda0100bb96ba0b5cbb5eb3a21803ae1d2
-  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  appinio_social_share: fc9891e854bdcf17d443ae4e7e54b46f8d0f7c63
+  FBAEMKit: 6c7b5eb77c96861bb59e040842c6e55bf39512ce
+  FBSDKCoreKit: 5e4dd478947ab1bcc887e8cfadeae0727af1a942
+  FBSDKCoreKit_Basics: cd7b5f5d1e8868c26706917919d058999ca672c3
+  FBSDKShareKit: d9269157b4e9620f0bc1a461c5ead35a65cede9a
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   TikTokOpenSDK: dc1199ba9c6d7815aee0eaca6ec80ad13f7d9c1f
 
 PODFILE CHECKSUM: 775997f741c536251164e3eacf6e34abf2eb7a17
 
-COCOAPODS: 1.13.0
+COCOAPODS: 1.14.3
