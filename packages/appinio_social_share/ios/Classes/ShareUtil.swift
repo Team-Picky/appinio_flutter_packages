@@ -547,43 +547,51 @@ public class ShareUtil{
     }
     
     
+    private var documentInteractionController: UIDocumentInteractionController?
+    
     public func shareImageToWhatsApp(args : [String: Any?],result: @escaping FlutterResult, delegate: SharingDelegate) {
-      let imagePath = args[self.argImagePath] as? String
+        let imagePath = args[self.argImagePath] as? String
 
-      guard let url = URL(string: imagePath!) else {
-        result(FlutterError(code: "INVALID_PATH", message: "The image path is invalid", details: nil))
-        return
-      }
-      
-      guard let image = UIImage(contentsOfFile: url.path) else {
-        result(FlutterError(code: "IMAGE_ERROR", message: "Could not load image", details: nil))
-        return
-      }
+        guard let imagePath = imagePath else {
+            result(FlutterError(code: "INVALID_PATH", message: "The image path is invalid", details: nil))
+            return
+        }
+        
+        guard let image = UIImage(contentsOfFile: imagePath) else {
+            result(FlutterError(code: "IMAGE_ERROR", message: "Could not load image", details: nil))
+            return
+        }
     
     
         let urlWhats = "whatsapp://app"
-        if let urlString = urlWhats.addingPercentEncoding(withAllowedCharacters:CharacterSet.urlQueryAllowed) {
-            if let whatsappURL = URL(string: urlString) {
-
-                if UIApplication.shared.canOpenURL(whatsappURL as URL) {
-
-                        if let imageData = image.jpegData(compressionQuality: 1.0) {
-                            let tempFile = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Documents/whatsAppTmp.wai")
-                            do {
-                                try imageData.write(to: tempFile, options: .atomic)
-                                let documentInteractionController = UIDocumentInteractionController(url: tempFile)
-                                documentInteractionController.uti = "net.whatsapp.image"
-                                documentInteractionController.presentOpenInMenu(from: CGRect.zero, in: UIApplication.topViewController()!.view, animated: true)
-
-                            } catch {
-                                print(error)
+        if let whatsappURL = URL(string: urlWhats) {
+            if UIApplication.shared.canOpenURL(whatsappURL) {
+                if let imageData = image.jpegData(compressionQuality: 1.0) {
+                    let tempFile = URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Documents/whatsAppTmp.wai")
+                    do {
+                        try imageData.write(to: tempFile, options: .atomic)
+                        self.documentInteractionController = UIDocumentInteractionController(url: tempFile)
+                        self.documentInteractionController!.uti = "public.image"
+                        
+                        if let rootViewController = UIApplication.shared.windows.first?.rootViewController {
+                            // Open directly in WhatsApp by specifying the bundle identifier
+                            let opened = self.documentInteractionController!.presentOptionsMenu(from: CGRect.zero, in: rootViewController.view, animated: true)
+                            if opened {
+                                result(self.SUCCESS)
+                            } else {
+                                result(FlutterError(code: "ERROR", message: "Could not open WhatsApp", details: nil))
                             }
+                        } else {
+                            result(FlutterError(code: "ERROR", message: "Could not find view controller", details: nil))
                         }
-                    
-
+                    } catch {
+                        result(FlutterError(code: "IMAGE_ERROR", message: "Could not share image to WhatsApp", details: nil))
+                    }
                 } else {
-                   print("Cannot open whatsapp")
+                    result(FlutterError(code: "IMAGE_ERROR", message: "Could not convert image to JPEG", details: nil))
                 }
+            } else {
+                result(FlutterError(code: "APP_NOT_INSTALLED", message: "WhatsApp is not installed on this device", details: nil))
             }
         }
     }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:appinio_social_share/appinio_social_share.dart';
@@ -40,6 +42,14 @@ class _MyAppState extends State<MyApp> {
   }
 
   shareToWhatsApp(String message, String filePath) async {
-    await appinioSocialShare.android.shareToSMS(message, filePath);
+    try {
+      if (Platform.isAndroid) {
+        await appinioSocialShare.android.shareToWhatsapp(message, filePath);
+        return;
+      }
+      await appinioSocialShare.iOS.shareImageToWhatsApp(filePath);
+    } catch (e) {
+      print("Error sharing to WhatsApp: $e");
+    }
   }
 }
