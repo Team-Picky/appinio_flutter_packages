@@ -342,14 +342,45 @@ public class SocialShareUtil {
 
     private String shareFilesToPackage(List<String> imagePaths, Context activity, String packageName) {
         if (imagePaths == null || imagePaths.isEmpty()) return "No files to share";
+        
         Intent shareIntent = new Intent(Intent.ACTION_SEND_MULTIPLE);
         ArrayList<Uri> files = new ArrayList<Uri>();
+        
         for (int i = 0; i < imagePaths.size(); i++) {
-            Uri fileUri = FileProvider.getUriForFile(activity, activity.getApplicationContext().getPackageName() + ".provider", new File(imagePaths.get(i)));
+            File file = new File(imagePaths.get(i));
+            if (!file.exists()) {
+                return "File not found: " + imagePaths.get(i);
+            }
+            Uri fileUri = FileProvider.getUriForFile(activity, activity.getApplicationContext().getPackageName() + ".provider", file);
             files.add(fileUri);
         }
+        
+        if (files.isEmpty()) {
+            return "No valid files to share";
+        }
+        
         shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, files);
-        shareIntent.setType(getMimeTypeOfFile(imagePaths.get(0)));
+        
+        String mimeType = getMimeTypeOfFile(imagePaths.get(0));
+        // Fallback to image/* for better compatibility if detection fails
+        if (mimeType == null || mimeType.isEmpty() || mimeType.equals("*/*")) {
+            String extension = imagePaths.get(0).substring(imagePaths.get(0).lastIndexOf(".") + 1).toLowerCase();
+            if (extension.equals("jpg") || extension.equals("jpeg")) {
+                mimeType = "image/jpeg";
+            } else if (extension.equals("png")) {
+                mimeType = "image/png";
+            } else if (extension.equals("gif")) {
+                mimeType = "image/gif";
+            } else if (extension.equals("webp")) {
+                mimeType = "image/webp";
+            } else if (extension.equals("mp4")) {
+                mimeType = "video/mp4";
+            } else {
+                mimeType = "image/*";
+            }
+        }
+        shareIntent.setType(mimeType);
+        
         shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         shareIntent.setPackage(packageName);
@@ -357,6 +388,10 @@ public class SocialShareUtil {
 //            shareIntent.setComponent(ComponentName.createRelative(packageName, "com.instagram.share.handleractivity.ShareHandlerActivity")); //open instagram feed
 //        }
         try {
+            // Verify that the target app can handle this intent
+            if (activity.getPackageManager().queryIntentActivities(shareIntent, 0).isEmpty()) {
+                return ERROR_APP_NOT_AVAILABLE;
+            }
             activity.startActivity(shareIntent);
             return SUCCESS;
         } catch (Exception e) {
@@ -366,25 +401,80 @@ public class SocialShareUtil {
     }
 
     private String shareFileAndTextToPackage(String imagePath, String message, Context activity, String packageName) {
+        Log.d("SocialShare", "shareFileAndTextToPackage: imagePath=" + imagePath + ", message=" + message + ", package=" + packageName);
+        
+        // First check if the app is installed
+        try {
+            activity.getPackageManager().getPackageInfo(packageName, PackageManager.GET_META_DATA);
+            Log.d("SocialShare", "Package " + packageName + " is installed");
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e("SocialShare", "Package " + packageName + " not found");
+            return ERROR_APP_NOT_AVAILABLE;
+        }
+        
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        
         if (imagePath != null) {
-            Uri fileUri = FileProvider.getUriForFile(activity, activity.getApplicationContext().getPackageName() + ".provider", new File(imagePath));
+            File file = new File(imagePath);
+            Log.d("SocialShare", "File exists: " + file.exists() + ", path: " + file.getAbsolutePath());
+            if (!file.exists()) {
+                return "File not found: " + imagePath;
+            }
+            
+            Uri fileUri;
+            try {
+                fileUri = FileProvider.getUriForFile(activity, activity.getApplicationContext().getPackageName() + ".provider", file);
+                Log.d("SocialShare", "FileProvider URI created: " + fileUri);
+            } catch (Exception e) {
+                Log.e("SocialShare", "FileProvider error: " + e.getMessage());
+                return "FileProvider error: " + e.getLocalizedMessage();
+            }
+            
             shareIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
-            shareIntent.setType(getMimeTypeOfFile(imagePath));
+            
+            String mimeType = getMimeTypeOfFile(imagePath);
+            // Fallback to image/* for better compatibility if detection fails
+            if (mimeType == null || mimeType.isEmpty() || mimeType.equals("*/*")) {
+                String extension = imagePath.substring(imagePath.lastIndexOf(".") + 1).toLowerCase();
+                if (extension.equals("jpg") || extension.equals("jpeg")) {
+                    mimeType = "image/jpeg";
+                } else if (extension.equals("png")) {
+                    mimeType = "image/png";
+                } else if (extension.equals("gif")) {
+                    mimeType = "image/gif";
+                } else if (extension.equals("webp")) {
+                    mimeType = "image/webp";
+                } else if (extension.equals("mp4")) {
+                    mimeType = "video/mp4";
+                } else {
+                    mimeType = "image/*";
+                }
+            }
+            Log.d("SocialShare", "MIME type: " + mimeType);
+            shareIntent.setType(mimeType);
         } else {
             shareIntent.setType("text/plain");
         }
-        shareIntent.putExtra(Intent.EXTRA_TEXT, message);
+        
+        if (message != null && !message.isEmpty()) {
+            shareIntent.putExtra(Intent.EXTRA_TEXT, message);
+        }
+        
+        shareIntent.setPackage(packageName);
         shareIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        shareIntent.setPackage(packageName);
+        
         if (packageName.equals(INSTAGRAM_PACKAGE) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             shareIntent.setComponent(ComponentName.createRelative(packageName, "com.instagram.share.handleractivity.ShareHandlerActivity")); //open instagram feed
         }
+        
         try {
+            Log.d("SocialShare", "Starting activity with intent");
             activity.startActivity(shareIntent);
+            Log.d("SocialShare", "Activity started successfully");
             return SUCCESS;
         } catch (Exception e) {
+            Log.e("SocialShare", "Error starting activity: " + e.getMessage());
             e.printStackTrace();
             return e.getLocalizedMessage();
         }
@@ -407,6 +497,16 @@ public class SocialShareUtil {
         Map<String, Boolean> apps = new HashMap<String, Boolean>();
 
         PackageManager pm = context.getPackageManager();
+        
+        // Debug: List all packages containing "whatsapp"
+        Log.d("SocialShare", "=== Searching for WhatsApp packages ===");
+        List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        for (ApplicationInfo packageInfo : packages) {
+            if (packageInfo.packageName.toLowerCase().contains("whatsapp")) {
+                Log.d("SocialShare", "Found WhatsApp variant: " + packageInfo.packageName);
+            }
+        }
+        Log.d("SocialShare", "=== End WhatsApp search ===");
 
         Intent intent = new Intent(Intent.ACTION_SENDTO).addCategory(Intent.CATEGORY_DEFAULT);
         intent.setType("vnd.android-dir/mms-sms");
@@ -417,9 +517,13 @@ public class SocialShareUtil {
 
         for (int i = 0; i < appNames.length; i++) {
             try {
-                pm.getPackageInfo(appsMap.get(appNames[i]), PackageManager.GET_META_DATA);
+                String packageName = appsMap.get(appNames[i]);
+                Log.d("SocialShare", "Checking package: " + appNames[i] + " -> " + packageName);
+                pm.getPackageInfo(packageName, PackageManager.GET_META_DATA);
+                Log.d("SocialShare", appNames[i] + " is installed");
                 apps.put(appNames[i], true);
             } catch (Exception e) {
+                Log.d("SocialShare", appNames[i] + " not found: " + e.getMessage());
                 apps.put(appNames[i], false);
             }
         }

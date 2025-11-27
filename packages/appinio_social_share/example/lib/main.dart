@@ -27,6 +27,13 @@ class _MyAppState extends State<MyApp> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
+                child: const Text("Check Installed Apps"),
+                onPressed: () async {
+                  var apps = await appinioSocialShare.getInstalledApps();
+                  print("Installed apps: $apps");
+                },
+              ),
+              ElevatedButton(
                 child: const Text("ShareToWhatsapp"),
                 onPressed: () async {
                   FilePickerResult? result = await FilePicker.platform
