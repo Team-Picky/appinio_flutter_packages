@@ -23,6 +23,7 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.share.Sharer;
 import com.facebook.share.model.ShareHashtag;
+import com.facebook.share.model.ShareLinkContent;
 import com.facebook.share.model.SharePhoto;
 import com.facebook.share.model.SharePhotoContent;
 import com.facebook.share.widget.ShareDialog;
@@ -277,30 +278,48 @@ public class SocialShareUtil {
                 }
             });
             
-            List<SharePhoto> sharePhotos = new ArrayList<>();
-            for (int i = 0; i < filePaths.size(); i++) {
-                File file = new File(filePaths.get(i));
-                if (!file.exists()) {
-                    Log.e("SocialShare", "File not found: " + filePaths.get(i));
-                    result.success("File not found: " + filePaths.get(i));
-                    return;
+            // Check if we have images to share
+            if (filePaths != null && !filePaths.isEmpty()) {
+                // Share with photos
+                List<SharePhoto> sharePhotos = new ArrayList<>();
+                for (int i = 0; i < filePaths.size(); i++) {
+                    File file = new File(filePaths.get(i));
+                    if (!file.exists()) {
+                        Log.e("SocialShare", "File not found: " + filePaths.get(i));
+                        result.success("File not found: " + filePaths.get(i));
+                        return;
+                    }
+                    Uri fileUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".provider", file);
+                    Log.d("SocialShare", "Adding photo: " + fileUri);
+                    sharePhotos.add(new SharePhoto.Builder().setImageUrl(fileUri).build());
                 }
-                Uri fileUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".provider", file);
-                Log.d("SocialShare", "Adding photo: " + fileUri);
-                sharePhotos.add(new SharePhoto.Builder().setImageUrl(fileUri).build());
-            }
-            
-            SharePhotoContent content = new SharePhotoContent.Builder()
-                    .setShareHashtag(new ShareHashtag.Builder().setHashtag(text).build())
-                    .setPhotos(sharePhotos)
-                    .build();
-            
-            if (ShareDialog.canShow(SharePhotoContent.class)) {
-                Log.d("SocialShare", "Showing Facebook ShareDialog");
-                shareDialog.show(content);
+                
+                SharePhotoContent content = new SharePhotoContent.Builder()
+                        .setShareHashtag(new ShareHashtag.Builder().setHashtag(text).build())
+                        .setPhotos(sharePhotos)
+                        .build();
+                
+                if (ShareDialog.canShow(SharePhotoContent.class)) {
+                    Log.d("SocialShare", "Showing Facebook ShareDialog with photos");
+                    shareDialog.show(content);
+                } else {
+                    Log.e("SocialShare", "ShareDialog cannot show SharePhotoContent");
+                    result.success(ERROR_APP_NOT_AVAILABLE);
+                }
             } else {
-                Log.e("SocialShare", "ShareDialog cannot show SharePhotoContent");
-                result.success(ERROR_APP_NOT_AVAILABLE);
+                // Share link/text only
+                Log.d("SocialShare", "Sharing URL without photos: " + text);
+                ShareLinkContent linkContent = new ShareLinkContent.Builder()
+                        .setContentUrl(Uri.parse(text))
+                        .build();
+                
+                if (ShareDialog.canShow(ShareLinkContent.class)) {
+                    Log.d("SocialShare", "Showing Facebook ShareDialog with link");
+                    shareDialog.show(linkContent);
+                } else {
+                    Log.e("SocialShare", "ShareDialog cannot show ShareLinkContent");
+                    result.success(ERROR_APP_NOT_AVAILABLE);
+                }
             }
         } catch (Exception e) {
             Log.e("SocialShare", "Exception in shareToFacebook: " + e.getMessage());
