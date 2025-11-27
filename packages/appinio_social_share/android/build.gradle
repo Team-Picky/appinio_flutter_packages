@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.1.2'
+        classpath 'com.android.tools.build:gradle:8.7.3'
     }
 }
 
@@ -22,12 +22,8 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 
 android {
-
-    if (project.android.hasProperty("namespace")) {
-        namespace 'com.appinio.socialshare.appinio_social_share'
-    }
-
-    compileSdkVersion 31
+    namespace 'com.appinio.socialshare.appinio_social_share'
+    compileSdkVersion 36
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -35,7 +31,7 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 21
     }
 }
 

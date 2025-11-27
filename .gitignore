@@ -1,9 +1,10 @@
 /.idea
 /publish.md
-/.DS_Store
+.DS_Store
 /.idea/
 /.idea/libraries
 /.idea/libraries/
 
 # FVM Version Cache
 .fvm/
+packages/appinio_social_share/android/gradle/wrapper/gradle-wrapper.jar
