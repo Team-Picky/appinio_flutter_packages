@@ -1,3 +1,5 @@
-# These owners will be the default owners for everything in the repo.
+# Admins are the default owners for everything in the repo.
+* @Team-Picky/admins
 
-- @bilalhamud @hamzahayak @javi-appinio @festelo @Modi-gh
+# Admins should always review changes to github settings
+/.github/ @Team-Picky/admins
