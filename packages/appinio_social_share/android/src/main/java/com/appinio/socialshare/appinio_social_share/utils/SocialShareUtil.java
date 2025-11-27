@@ -262,8 +262,16 @@ public class SocialShareUtil {
             FacebookSdk.setApplicationId(appId);
             FacebookSdk.sdkInitialize(activity.getApplicationContext());
             
-            callbackManager = callbackManager == null ? CallbackManager.Factory.create() : callbackManager;
-            ShareDialog shareDialog = new ShareDialog(activity);
+            // Ensure CallbackManager is initialized
+            if (callbackManager == null) {
+                callbackManager = CallbackManager.Factory.create();
+                Log.d("SocialShare", "Created new CallbackManager");
+            }
+            
+            // Create ShareDialog with the activity
+            final ShareDialog shareDialog = new ShareDialog(activity);
+            
+            // Register callback BEFORE setting content
             shareDialog.registerCallback(callbackManager, new FacebookCallback<Sharer.Result>() {
                 @Override
                 public void onSuccess(Sharer.Result result1) {
@@ -326,11 +334,24 @@ public class SocialShareUtil {
                 
                 SharePhotoContent content = contentBuilder.build();
                 
-                if (ShareDialog.canShow(SharePhotoContent.class)) {
-                    Log.d("SocialShare", "Showing Facebook ShareDialog with " + sharePhotos.size() + " photos");
-                    shareDialog.show(content);
+                Log.d("SocialShare", "Content built with " + sharePhotos.size() + " photos");
+                Log.d("SocialShare", "Checking if ShareDialog.canShow(SharePhotoContent.class)...");
+                
+                boolean canShow = ShareDialog.canShow(SharePhotoContent.class);
+                Log.d("SocialShare", "ShareDialog.canShow result: " + canShow);
+                
+                if (canShow) {
+                    Log.d("SocialShare", "Calling shareDialog.show() with SharePhotoContent");
+                    try {
+                        shareDialog.show(content);
+                        Log.d("SocialShare", "shareDialog.show() called successfully");
+                    } catch (Exception e) {
+                        Log.e("SocialShare", "Exception calling shareDialog.show(): " + e.getMessage());
+                        e.printStackTrace();
+                        result.success("Error showing dialog: " + e.getLocalizedMessage());
+                    }
                 } else {
-                    Log.e("SocialShare", "ShareDialog cannot show SharePhotoContent");
+                    Log.e("SocialShare", "ShareDialog cannot show SharePhotoContent - Facebook app may not be installed or configured properly");
                     result.success(ERROR_APP_NOT_AVAILABLE);
                 }
             } else {
@@ -340,11 +361,22 @@ public class SocialShareUtil {
                         .setContentUrl(Uri.parse(text))
                         .build();
                 
-                if (ShareDialog.canShow(ShareLinkContent.class)) {
-                    Log.d("SocialShare", "Showing Facebook ShareDialog with link");
-                    shareDialog.show(linkContent);
+                Log.d("SocialShare", "Checking if ShareDialog.canShow(ShareLinkContent.class)...");
+                boolean canShow = ShareDialog.canShow(ShareLinkContent.class);
+                Log.d("SocialShare", "ShareDialog.canShow result: " + canShow);
+                
+                if (canShow) {
+                    Log.d("SocialShare", "Calling shareDialog.show() with ShareLinkContent");
+                    try {
+                        shareDialog.show(linkContent);
+                        Log.d("SocialShare", "shareDialog.show() called successfully");
+                    } catch (Exception e) {
+                        Log.e("SocialShare", "Exception calling shareDialog.show(): " + e.getMessage());
+                        e.printStackTrace();
+                        result.success("Error showing dialog: " + e.getLocalizedMessage());
+                    }
                 } else {
-                    Log.e("SocialShare", "ShareDialog cannot show ShareLinkContent");
+                    Log.e("SocialShare", "ShareDialog cannot show ShareLinkContent - Facebook app may not be installed or configured properly");
                     result.success(ERROR_APP_NOT_AVAILABLE);
                 }
             }
@@ -587,13 +619,8 @@ public class SocialShareUtil {
 
         for (int i = 0; i < appNames.length; i++) {
             try {
-                String packageName = appsMap.get(appNames[i]);
-                Log.d("SocialShare", "Checking package: " + appNames[i] + " -> " + packageName);
-                pm.getPackageInfo(packageName, PackageManager.GET_META_DATA);
-                Log.d("SocialShare", appNames[i] + " is installed");
                 apps.put(appNames[i], true);
             } catch (Exception e) {
-                Log.d("SocialShare", appNames[i] + " not found: " + e.getMessage());
                 apps.put(appNames[i], false);
             }
         }
