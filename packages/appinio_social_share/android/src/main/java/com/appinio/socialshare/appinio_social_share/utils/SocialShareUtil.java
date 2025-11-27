@@ -239,39 +239,73 @@ public class SocialShareUtil {
 
 
     public void shareToFacebook(List<String> filePaths, String text, Activity activity, MethodChannel.Result result) {
-        FacebookSdk.fullyInitialize();
-        FacebookSdk.setApplicationId(getFacebookAppId(activity));
-        callbackManager = callbackManager == null ? CallbackManager.Factory.create() : callbackManager;
-        ShareDialog shareDialog = new ShareDialog(activity);
-        shareDialog.registerCallback(callbackManager, new FacebookCallback<Sharer.Result>() {
-            @Override
-            public void onSuccess(Sharer.Result result1) {
-                System.out.println("---------------onSuccess");
-                result.success(SUCCESS);
+        try {
+            Log.d("SocialShare", "shareToFacebook: Starting Facebook share");
+            
+            String appId = getFacebookAppId(activity);
+            Log.d("SocialShare", "Facebook App ID: " + appId);
+            
+            if (appId == null || appId.isEmpty() || appId.equals("your_facebook_app_id_here")) {
+                Log.e("SocialShare", "Facebook App ID not configured");
+                result.success("ERROR: Facebook App ID not configured in AndroidManifest.xml");
+                return;
             }
+            
+            // Initialize Facebook SDK with App ID
+            FacebookSdk.setApplicationId(appId);
+            FacebookSdk.sdkInitialize(activity.getApplicationContext());
+            
+            callbackManager = callbackManager == null ? CallbackManager.Factory.create() : callbackManager;
+            ShareDialog shareDialog = new ShareDialog(activity);
+            shareDialog.registerCallback(callbackManager, new FacebookCallback<Sharer.Result>() {
+                @Override
+                public void onSuccess(Sharer.Result result1) {
+                    Log.d("SocialShare", "Facebook share success");
+                    result.success(SUCCESS);
+                }
 
-            @Override
-            public void onCancel() {
-                result.success(ERROR_CANCELLED);
-            }
+                @Override
+                public void onCancel() {
+                    Log.d("SocialShare", "Facebook share cancelled");
+                    result.success(ERROR_CANCELLED);
+                }
 
-            @Override
-            public void onError(FacebookException error) {
-                System.out.println("---------------onError");
-                result.success(error.getLocalizedMessage());
+                @Override
+                public void onError(FacebookException error) {
+                    Log.e("SocialShare", "Facebook share error: " + error.getMessage());
+                    result.success(error.getLocalizedMessage());
+                }
+            });
+            
+            List<SharePhoto> sharePhotos = new ArrayList<>();
+            for (int i = 0; i < filePaths.size(); i++) {
+                File file = new File(filePaths.get(i));
+                if (!file.exists()) {
+                    Log.e("SocialShare", "File not found: " + filePaths.get(i));
+                    result.success("File not found: " + filePaths.get(i));
+                    return;
+                }
+                Uri fileUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".provider", file);
+                Log.d("SocialShare", "Adding photo: " + fileUri);
+                sharePhotos.add(new SharePhoto.Builder().setImageUrl(fileUri).build());
             }
-        });
-        List<SharePhoto> sharePhotos = new ArrayList<>();
-        for (int i = 0; i < filePaths.size(); i++) {
-            Uri fileUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".provider", new File(filePaths.get(i)));
-            sharePhotos.add(new SharePhoto.Builder().setImageUrl(fileUri).build());
-        }
-        SharePhotoContent content = new SharePhotoContent.Builder()
-                .setShareHashtag(new ShareHashtag.Builder().setHashtag(text).build())
-                .setPhotos(sharePhotos)
-                .build();
-        if (ShareDialog.canShow(SharePhotoContent.class)) {
-            shareDialog.show(content);
+            
+            SharePhotoContent content = new SharePhotoContent.Builder()
+                    .setShareHashtag(new ShareHashtag.Builder().setHashtag(text).build())
+                    .setPhotos(sharePhotos)
+                    .build();
+            
+            if (ShareDialog.canShow(SharePhotoContent.class)) {
+                Log.d("SocialShare", "Showing Facebook ShareDialog");
+                shareDialog.show(content);
+            } else {
+                Log.e("SocialShare", "ShareDialog cannot show SharePhotoContent");
+                result.success(ERROR_APP_NOT_AVAILABLE);
+            }
+        } catch (Exception e) {
+            Log.e("SocialShare", "Exception in shareToFacebook: " + e.getMessage());
+            e.printStackTrace();
+            result.success("ERROR: " + e.getLocalizedMessage());
         }
     }
 

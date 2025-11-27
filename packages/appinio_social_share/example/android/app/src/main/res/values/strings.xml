@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Get these from https://developers.facebook.com/apps/YOUR_APP_ID/settings/basic/ -->
+    <string name="facebook_app_id">1555211952584257</string>
+    <!-- Client Token is found in Settings > Advanced > Security > Client Token -->
+    <string name="facebook_client_token">495f853d101d750021dec729dfc40181</string>
+</resources>

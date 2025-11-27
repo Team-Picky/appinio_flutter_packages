@@ -51,6 +51,27 @@ class _MyAppState extends State<MyApp> {
                   }
                 },
               ),
+              ElevatedButton(
+                child: const Text("Share Images to Facebook"),
+                onPressed: () async {
+                  FilePickerResult? result = await FilePicker.platform
+                      .pickFiles(type: FileType.image, allowMultiple: true);
+                  if (result != null && result.paths.isNotEmpty) {
+                    shareToFacebook("#testhashtag",
+                        result.paths.whereType<String>().toList());
+                  }
+                },
+              ),
+              ElevatedButton(
+                child: const Text("Share to Facebook Story"),
+                onPressed: () async {
+                  FilePickerResult? result = await FilePicker.platform
+                      .pickFiles(type: FileType.image, allowMultiple: false);
+                  if (result != null && result.paths.isNotEmpty) {
+                    shareToFacebookStory(result.paths[0]!);
+                  }
+                },
+              ),
             ],
           ),
         ));
@@ -83,6 +104,49 @@ class _MyAppState extends State<MyApp> {
       print("Share result: $result");
     } catch (e) {
       print("Error sharing image to WhatsApp: $e");
+    }
+  }
+
+  shareToFacebook(String hashtag, List<String> filePaths) async {
+    try {
+      String result;
+      if (Platform.isAndroid) {
+        result = await appinioSocialShare.android
+            .shareToFacebook(hashtag, filePaths);
+      } else {
+        result =
+            await appinioSocialShare.iOS.shareToFacebook(hashtag, filePaths);
+      }
+      print("Facebook share result: $result");
+    } catch (e) {
+      print("Error sharing to Facebook: $e");
+    }
+  }
+
+  shareToFacebookStory(String imagePath) async {
+    try {
+      String result;
+      // Facebook App ID - replace with your actual App ID
+      const String appId = "1555211952584257";
+
+      if (Platform.isAndroid) {
+        result = await appinioSocialShare.android.shareToFacebookStory(
+          appId,
+          backgroundImage: imagePath,
+          backgroundTopColor: "#FF0000",
+          backgroundBottomColor: "#00FF00",
+        );
+      } else {
+        result = await appinioSocialShare.iOS.shareToFacebookStory(
+          appId,
+          backgroundImage: imagePath,
+          backgroundTopColor: "#FF0000",
+          backgroundBottomColor: "#00FF00",
+        );
+      }
+      print("Facebook Story share result: $result");
+    } catch (e) {
+      print("Error sharing to Facebook Story: $e");
     }
   }
 }

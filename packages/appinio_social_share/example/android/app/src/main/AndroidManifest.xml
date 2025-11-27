@@ -46,6 +46,14 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- Facebook App ID and Client Token - Get these from https://developers.facebook.com/ -->
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id" />
+        <meta-data
+            android:name="com.facebook.sdk.ClientToken"
+            android:value="@string/facebook_client_token" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
@@ -55,5 +63,11 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Facebook ContentProvider - Required for Facebook SDK -->
+        <provider
+            android:name="com.facebook.FacebookContentProvider"
+            android:authorities="com.facebook.app.FacebookContentProvider1555211952584257"
+            android:exported="true" />
     </application>
 </manifest>
