@@ -2,6 +2,7 @@ package com.appinio.socialshare.appinio_social_share;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -18,11 +19,12 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import io.flutter.plugin.common.PluginRegistry;
 
 /**
  * AppinioSocialSharePlugin
  */
-public class AppinioSocialSharePlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
+public class AppinioSocialSharePlugin implements FlutterPlugin, MethodCallHandler, ActivityAware, PluginRegistry.ActivityResultListener {
 
     private final String INSTALLED_APPS = "installed_apps";
     private final String INSTAGRAM_DIRECT = "instagram_direct";
@@ -51,6 +53,7 @@ public class AppinioSocialSharePlugin implements FlutterPlugin, MethodCallHandle
     private Activity activity;
     private Context activeContext;
     private Context context;
+    private ActivityPluginBinding activityPluginBinding;
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -144,23 +147,38 @@ public class AppinioSocialSharePlugin implements FlutterPlugin, MethodCallHandle
     @Override
     public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
         activity = binding.getActivity();
-
+        activityPluginBinding = binding;
+        binding.addActivityResultListener(this);
     }
 
     @Override
     public void onDetachedFromActivityForConfigChanges() {
+        if (activityPluginBinding != null) {
+            activityPluginBinding.removeActivityResultListener(this);
+        }
         activity = null;
-
+        activityPluginBinding = null;
     }
 
     @Override
     public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {
         activity = binding.getActivity();
-
+        activityPluginBinding = binding;
+        binding.addActivityResultListener(this);
     }
 
     @Override
     public void onDetachedFromActivity() {
+        if (activityPluginBinding != null) {
+            activityPluginBinding.removeActivityResultListener(this);
+        }
         activity = null;
+        activityPluginBinding = null;
+    }
+
+    @Override
+    public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Forward the activity result to the Facebook CallbackManager
+        return socialShareUtil.onActivityResult(requestCode, resultCode, data);
     }
 }

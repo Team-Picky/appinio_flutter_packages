@@ -63,6 +63,12 @@ public class SocialShareUtil {
 
     private static CallbackManager callbackManager;
 
+    public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (callbackManager != null) {
+            return callbackManager.onActivityResult(requestCode, resultCode, data);
+        }
+        return false;
+    }
 
     public String shareToWhatsApp(String imagePath, String msg, Context context) {
         return shareFileAndTextToPackage(imagePath, msg, context, WHATSAPP_PACKAGE);
