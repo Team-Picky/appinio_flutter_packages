@@ -531,16 +531,6 @@ public class SocialShareUtil {
         Map<String, Boolean> apps = new HashMap<String, Boolean>();
 
         PackageManager pm = context.getPackageManager();
-        
-        // Debug: List all packages containing "whatsapp"
-        Log.d("SocialShare", "=== Searching for WhatsApp packages ===");
-        List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-        for (ApplicationInfo packageInfo : packages) {
-            if (packageInfo.packageName.toLowerCase().contains("whatsapp")) {
-                Log.d("SocialShare", "Found WhatsApp variant: " + packageInfo.packageName);
-            }
-        }
-        Log.d("SocialShare", "=== End WhatsApp search ===");
 
         Intent intent = new Intent(Intent.ACTION_SENDTO).addCategory(Intent.CATEGORY_DEFAULT);
         intent.setType("vnd.android-dir/mms-sms");
