@@ -286,7 +286,7 @@ public class SocialShareUtil {
             
             // Check if we have images to share
             if (filePaths != null && !filePaths.isEmpty()) {
-                // Share with photos
+                // Share with photos - use Bitmap instead of URI for better compatibility
                 List<SharePhoto> sharePhotos = new ArrayList<>();
                 for (int i = 0; i < filePaths.size(); i++) {
                     File file = new File(filePaths.get(i));
@@ -295,18 +295,39 @@ public class SocialShareUtil {
                         result.success("File not found: " + filePaths.get(i));
                         return;
                     }
-                    Uri fileUri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".provider", file);
-                    Log.d("SocialShare", "Adding photo: " + fileUri);
-                    sharePhotos.add(new SharePhoto.Builder().setImageUrl(fileUri).build());
+                    try {
+                        android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeFile(file.getAbsolutePath());
+                        if (bitmap == null) {
+                            Log.e("SocialShare", "Failed to decode bitmap from: " + filePaths.get(i));
+                            result.success("Failed to decode image: " + filePaths.get(i));
+                            return;
+                        }
+                        Log.d("SocialShare", "Adding photo bitmap from: " + file.getAbsolutePath());
+                        sharePhotos.add(new SharePhoto.Builder().setBitmap(bitmap).build());
+                    } catch (Exception e) {
+                        Log.e("SocialShare", "Error loading bitmap: " + e.getMessage());
+                        result.success("Error loading image: " + e.getLocalizedMessage());
+                        return;
+                    }
                 }
                 
-                SharePhotoContent content = new SharePhotoContent.Builder()
-                        .setShareHashtag(new ShareHashtag.Builder().setHashtag(text).build())
-                        .setPhotos(sharePhotos)
-                        .build();
+                SharePhotoContent.Builder contentBuilder = new SharePhotoContent.Builder()
+                        .setPhotos(sharePhotos);
+                
+                // Only add hashtag if it's not empty and looks like a hashtag
+                if (text != null && !text.isEmpty()) {
+                    if (text.startsWith("#")) {
+                        contentBuilder.setShareHashtag(new ShareHashtag.Builder().setHashtag(text).build());
+                    } else if (text.startsWith("http")) {
+                        // It's a URL, add as content URL
+                        contentBuilder.setContentUrl(Uri.parse(text));
+                    }
+                }
+                
+                SharePhotoContent content = contentBuilder.build();
                 
                 if (ShareDialog.canShow(SharePhotoContent.class)) {
-                    Log.d("SocialShare", "Showing Facebook ShareDialog with photos");
+                    Log.d("SocialShare", "Showing Facebook ShareDialog with " + sharePhotos.size() + " photos");
                     shareDialog.show(content);
                 } else {
                     Log.e("SocialShare", "ShareDialog cannot show SharePhotoContent");
