@@ -34,12 +34,20 @@ class _MyAppState extends State<MyApp> {
                 },
               ),
               ElevatedButton(
-                child: const Text("ShareToWhatsapp"),
+                child: const Text("Share Text to WhatsApp"),
+                onPressed: () async {
+                  shareTextToWhatsApp(
+                      "Hello from Flutter! This is a test message.");
+                },
+              ),
+              ElevatedButton(
+                child: const Text("Share Image to WhatsApp"),
                 onPressed: () async {
                   FilePickerResult? result = await FilePicker.platform
                       .pickFiles(type: FileType.image, allowMultiple: false);
                   if (result != null && result.paths.isNotEmpty) {
-                    shareToWhatsApp("message", result.paths[0]!);
+                    shareImageToWhatsApp(
+                        "Check out this image!", result.paths[0]!);
                   }
                 },
               ),
@@ -48,15 +56,33 @@ class _MyAppState extends State<MyApp> {
         ));
   }
 
-  shareToWhatsApp(String message, String filePath) async {
+  shareTextToWhatsApp(String message) async {
     try {
+      String result;
       if (Platform.isAndroid) {
-        await appinioSocialShare.android.shareToWhatsapp(message, filePath);
-        return;
+        result =
+            await appinioSocialShare.android.shareToWhatsapp(message, null);
+      } else {
+        result = await appinioSocialShare.iOS.shareToWhatsapp(message);
       }
-      await appinioSocialShare.iOS.shareImageToWhatsApp(filePath);
+      print("Share result: $result");
     } catch (e) {
-      print("Error sharing to WhatsApp: $e");
+      print("Error sharing text to WhatsApp: $e");
+    }
+  }
+
+  shareImageToWhatsApp(String message, String filePath) async {
+    try {
+      String result;
+      if (Platform.isAndroid) {
+        result =
+            await appinioSocialShare.android.shareToWhatsapp(message, filePath);
+      } else {
+        result = await appinioSocialShare.iOS.shareImageToWhatsApp(filePath);
+      }
+      print("Share result: $result");
+    } catch (e) {
+      print("Error sharing image to WhatsApp: $e");
     }
   }
 }
